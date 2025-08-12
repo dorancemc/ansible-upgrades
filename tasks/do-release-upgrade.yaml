@@ -1,0 +1,19 @@
+---
+
+- name: Display current Debian/Ubuntu version
+  ansible.builtin.debug:
+    msg: "{{ ansible_distribution }} {{ ansible_distribution_version }}"
+
+- block:
+    - name: Run do-release-upgrade non-interactively (Ubuntu 20.04 to 22.04)
+      ansible.builtin.command: do-release-upgrade -f DistUpgradeViewNonInteractive
+
+    - name: Include reboot tasks after release upgrade
+      ansible.builtin.import_tasks: reboot.yaml
+  when: ansible_distribution == "Ubuntu" and ansible_distribution_version == "20.04"
+
+- block:
+
+    - name: Include reboot tasks after release upgrade
+      ansible.builtin.import_tasks: reboot.yaml
+  when: ansible_distribution == "Debian" and ansible_distribution_major_version == "12"

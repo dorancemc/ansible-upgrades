@@ -1,0 +1,10 @@
+---
+
+- name: Perform Debian/Ubuntu package upgrades
+  ansible.builtin.import_tasks: debian-upgrade.yaml
+
+- name: Upgrade to the next Debian/Ubuntu version
+  ansible.builtin.include_tasks: do-release-upgrade.yaml
+  when:
+    - do_release_upgrade is defined
+    - do_release_upgrade

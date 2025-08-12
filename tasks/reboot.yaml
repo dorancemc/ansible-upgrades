@@ -1,0 +1,29 @@
+---
+
+- name: Reboot the server
+  ansible.builtin.shell: sleep 2 && /sbin/shutdown -r now "Ansible system package upgraded"
+  async: 1
+  poll: 0
+
+- name: Wait for system to start shutdown process
+  ansible.builtin.pause:
+    seconds: 30
+
+- name: Wait for services to be available after reboot
+  block:
+    - name: Wait for SSH port to be open
+      ansible.builtin.wait_for:
+        host: "{{ inventory_hostname }}"
+        timeout: 300
+        port: "{{ upgrade_ssh_port|default(22) }}"
+        delay: 1
+        state: started
+
+    - name: Wait for additional TCP ports to be open
+      ansible.builtin.wait_for:
+        host: "{{ item.split(':')[0] if ':' in (item | string) else inventory_hostname }}"
+        timeout: 300
+        port: "{{ item.split(':')[1] if ':' in (item | string) else item }}"
+        delay: 1
+        state: started
+      loop: "{{ upgrade_wait_for_tcp_ports }}"

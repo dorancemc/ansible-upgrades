@@ -1,0 +1,14 @@
+---
+
+galaxy_info:
+  author: Dorance Martinez
+  description: Upgrade packages and OS
+  role_name: upgrade
+  company: dorancemc
+  license: Apache-2.0
+  min_ansible_version: "2.18"
+
+  galaxy_tags:
+    - upgrade
+
+dependencies: []

@@ -1,0 +1,50 @@
+---
+
+- name: Update package cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Check if there are packages available to be installed/upgraded
+  ansible.builtin.shell: /usr/bin/apt list --upgradable
+  register: packages
+  changed_when: false
+  check_mode: false
+
+- name: Display available packages for upgrade
+  ansible.builtin.debug:
+    var: packages.stdout_lines
+
+- name: End play in check mode
+  ansible.builtin.meta: end_play
+  when: ansible_check_mode
+
+- name: Upgrade all packages to the latest version
+  ansible.builtin.apt:
+    upgrade: dist
+    dpkg_options: 'force-confold,force-confdef'
+  async: 43200 # 12 hours
+  poll: 5
+  when: packages.stderr != ""
+
+- name: Remove useless packages from the cache
+  ansible.builtin.apt:
+    autoclean: true
+  async: 43200 # 12 hours
+  poll: 5
+
+- name: Remove dependencies that are no longer required
+  ansible.builtin.apt:
+    autoremove: true
+  async: 43200 # 12 hours
+  poll: 5
+
+- name: Check if a reboot is required
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+    get_checksum: false
+  register: file
+
+- name: Include reboot tasks if required
+  ansible.builtin.include_tasks: reboot.yaml
+  when: file.stat.exists == true
