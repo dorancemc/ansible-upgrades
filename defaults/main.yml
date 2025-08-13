@@ -1,0 +1,6 @@
+---
+
+upgrade_wait_for_tcp_ports: [] # After upgrade, wait for these ports to be open
+#   - 80
+#   - 443
+#   - 22

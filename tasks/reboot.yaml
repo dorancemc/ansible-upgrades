@@ -12,14 +12,17 @@
 - name: Wait for services to be available after reboot
   block:
     - name: Wait for SSH port to be open
+      become: false
       ansible.builtin.wait_for:
         host: "{{ inventory_hostname }}"
         timeout: 300
         port: "{{ upgrade_ssh_port|default(22) }}"
         delay: 1
         state: started
+      delegate_to: 127.0.0.1
 
     - name: Wait for additional TCP ports to be open
+      become: false
       ansible.builtin.wait_for:
         host: "{{ item.split(':')[0] if ':' in (item | string) else inventory_hostname }}"
         timeout: 300
@@ -27,3 +30,4 @@
         delay: 1
         state: started
       loop: "{{ upgrade_wait_for_tcp_ports }}"
+      delegate_to: 127.0.0.1
