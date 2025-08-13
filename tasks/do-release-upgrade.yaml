@@ -13,6 +13,33 @@
   when: ansible_distribution == "Ubuntu" and ansible_distribution_version == "20.04"
 
 - block:
+    - name: Warning about the upgrade
+      ansible.builtin.debug:
+        msg: "This upgrade should be applied only if you are sure you want to upgrade to the next version. \n
+              This will upgrade your system to the next version. \n
+              This process may take a while and you will not be able to access the system during the upgrade. \n
+              This application will reboot the system after the upgrade. \n
+              If you are not sure, please cancel the upgrade."
+
+    - name: Wait for system to start shutdown process
+      ansible.builtin.pause:
+        seconds: 30
+
+    - name: Update suite from bookworm to trixie in /etc/apt/sources.list.d/debian.sources
+      ansible.builtin.replace:
+        path: /etc/apt/sources.list.d/debian.sources
+        regexp: 'bookworm'
+        replace: 'trixie'
+        backup: yes
+
+    - name: Upgrade all packages to the latest version (full-upgrade)
+      ansible.builtin.apt:
+        update_cache: yes
+        upgrade: full
+        dpkg_options: 'force-confold,force-confdef'
+      async: 43200 # 12 hours
+      poll: 5
+      when: packages.stderr != ""
 
     - name: Include reboot tasks after release upgrade
       ansible.builtin.import_tasks: reboot.yaml
